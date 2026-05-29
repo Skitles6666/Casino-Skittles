@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 window/size/viewport_width=1600
 window/size/viewport_height=900
 window/size/mode=3
+window/stretch/mode="canvas_items"
 
 [dotnet]
 
@@ -32,3 +33,4 @@ project/assembly_name="Casino Games"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+textures/vram_compression/import_etc2_astc=true

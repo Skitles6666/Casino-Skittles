@@ -13,7 +13,7 @@ extends Control
 @export var rows := 4
 @export var cols := 5
 @export var active_lines := 30
-@export var cell_size := Vector2(250, 250)
+@export var cell_size := Vector2(150, 150)
 @export var auto_spin_delay := 0.05
 @export var bonus_symbol := "B" # scatter that triggers free games on reels 1/3/5
 @export var bonus_trigger_count := 3
@@ -236,12 +236,23 @@ func _on_auto_spin_toggled(pressed: bool):
 		_auto_spin_loop()
 
 func _setup_reel_cells():
+	var reels_container = $MarginContainer/VBox/Reels
+	if reels_container is GridContainer:
+		reels_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		reels_container.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		reels_container.custom_minimum_size = Vector2(
+			cell_size.x * float(cols) + 12.0 * float(max(0, cols - 1)),
+			cell_size.y * float(rows) + 12.0 * float(max(0, rows - 1))
+		)
+
 	for col in reel_rects:
 		for rect in col:
-			rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-			rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			rect.custom_minimum_size = cell_size
+			rect.size = cell_size
 
 func _collect_reel_rects() -> Array:
 	var reels: Array = []
@@ -392,14 +403,14 @@ func _load_symbols():
 			symbol_defs.append({"texture": tex, "name": name})
 
 func _load_symbol_texture(path: String) -> Texture2D:
+	var resource = load(path)
+	if resource is Texture2D:
+		return resource
+
 	var image := Image.new()
 	var err := image.load(path)
 	if err == OK:
 		return ImageTexture.create_from_image(image)
-
-	var resource = load(path)
-	if resource is Texture2D:
-		return resource
 	return null
 
 func _collect_needed_symbols() -> Array:

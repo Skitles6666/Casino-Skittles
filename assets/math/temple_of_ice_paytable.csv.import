@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b8woxtmj5dwsy"
+
+[deps]
+
+files=["res://assets/math/temple_of_ice_paytable.type.translation", "res://assets/math/temple_of_ice_paytable.5oak.translation", "res://assets/math/temple_of_ice_paytable.4oak.translation", "res://assets/math/temple_of_ice_paytable.3oak.translation", "res://assets/math/temple_of_ice_paytable.2oak.translation", "res://assets/math/temple_of_ice_paytable.notes.translation"]
+
+source_file="res://assets/math/temple_of_ice_paytable.csv"
+dest_files=["res://assets/math/temple_of_ice_paytable.type.translation", "res://assets/math/temple_of_ice_paytable.5oak.translation", "res://assets/math/temple_of_ice_paytable.4oak.translation", "res://assets/math/temple_of_ice_paytable.3oak.translation", "res://assets/math/temple_of_ice_paytable.2oak.translation", "res://assets/math/temple_of_ice_paytable.notes.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

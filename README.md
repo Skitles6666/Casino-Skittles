@@ -12,6 +12,7 @@ A free casino game collection built in Godot.
 - Video poker
 - Pai Gow Poker
 - Three Card Poker
+- Criss Cross Poker
 - Slots
 
 ## Run It

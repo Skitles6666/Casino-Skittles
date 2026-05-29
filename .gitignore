@@ -3,6 +3,8 @@
 .import/
 android/
 export_presets.cfg
+*.apk
+*.apk.idsig
 
 # Bundled editor/runtime binaries
 Godot*_win64.exe

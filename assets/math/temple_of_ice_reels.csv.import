@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://cgatm80ja7j6x"
+
+[deps]
+
+files=["res://assets/math/temple_of_ice_reels.reel.translation", "res://assets/math/temple_of_ice_reels.pos.translation", "res://assets/math/temple_of_ice_reels.symbol.translation"]
+
+source_file="res://assets/math/temple_of_ice_reels.csv"
+dest_files=["res://assets/math/temple_of_ice_reels.reel.translation", "res://assets/math/temple_of_ice_reels.pos.translation", "res://assets/math/temple_of_ice_reels.symbol.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

@@ -1,0 +1,644 @@
+KENO VARIABLE COVERAGE WHEELS
+
+These layouts stack coverage inside a chosen box. They do not make the box itself more likely to hit.
+
+========================================================================
+3X3 4-SPOT / 20 CARDS
+
+Position template:
+ 1  2  3
+ 4  5  6
+ 7  8  9
+
+Cards:
+A (4-spot): 1,4,5,9
+B (4-spot): 2,5,8,9
+C (4-spot): 4,5,6,8
+D (4-spot): 1,3,4,7
+E (4-spot): 1,3,5,8
+F (4-spot): 1,6,8,9
+G (4-spot): 3,4,6,7
+H (4-spot): 2,3,4,5
+I (4-spot): 1,2,3,6
+J (4-spot): 2,4,6,9
+K (4-spot): 1,2,4,8
+L (4-spot): 1,2,7,9
+M (4-spot): 1,2,5,7
+N (4-spot): 3,4,8,9
+O (4-spot): 2,3,7,8
+P (4-spot): 1,6,7,8
+Q (4-spot): 4,7,8,9
+R (4-spot): 3,5,7,9
+S (4-spot): 3,5,6,9
+T (4-spot): 2,5,6,7
+
+Mini grids:
+A (4-spot)
+X . .
+X X .
+. . X
+
+B (4-spot)
+. X .
+. X .
+. X X
+
+C (4-spot)
+. . .
+X X X
+. X .
+
+D (4-spot)
+X . X
+X . .
+X . .
+
+E (4-spot)
+X . X
+. X .
+. X .
+
+F (4-spot)
+X . .
+. . X
+. X X
+
+G (4-spot)
+. . X
+X . X
+X . .
+
+H (4-spot)
+. X X
+X X .
+. . .
+
+I (4-spot)
+X X X
+. . X
+. . .
+
+J (4-spot)
+. X .
+X . X
+. . X
+
+K (4-spot)
+X X .
+X . .
+. X .
+
+L (4-spot)
+X X .
+. . .
+X . X
+
+M (4-spot)
+X X .
+. X .
+X . .
+
+N (4-spot)
+. . X
+X . .
+. X X
+
+O (4-spot)
+. X X
+. . .
+X X .
+
+P (4-spot)
+X . .
+. . X
+X X .
+
+Q (4-spot)
+. . .
+X . .
+X X X
+
+R (4-spot)
+. . X
+. X .
+X . X
+
+S (4-spot)
+. . X
+. X X
+. . X
+
+T (4-spot)
+. X .
+. X X
+X . .
+
+Coverage notes:
+- Square stack range: 8 to 9 uses.
+- 4 in box: exact hits on 20/126 cluster shapes; range 0-1 exact cards.
+- 4 in box: near-miss backup range 0-5 cards.
+- 5 in box: exact hits on 94/126 cluster shapes; range 0-2 exact cards.
+- 5 in box: near-miss backup range 2-9 cards.
+- 6 in box: exact hits on 84/84 cluster shapes; range 1-3 exact cards.
+- 6 in box: near-miss backup range 7-12 cards.
+- 7 in box: exact hits on 36/36 cluster shapes; range 5-6 exact cards.
+- 7 in box: near-miss backup range 10-12 cards.
+- 8 in box: exact hits on 9/9 cluster shapes; range 11-12 exact cards.
+- 8 in box: near-miss backup range 8-9 cards.
+
+========================================================================
+4X4 4-SPOT / 20 CARDS
+
+Position template:
+ 1  2  3  4
+ 5  6  7  8
+ 9 10 11 12
+13 14 15 16
+
+Cards:
+A (4-spot): 7,10,12,15
+B (4-spot): 2,3,9,12
+C (4-spot): 1,3,9,15
+D (4-spot): 6,9,11,14
+E (4-spot): 3,8,11,15
+F (4-spot): 1,8,12,14
+G (4-spot): 8,9,10,16
+H (4-spot): 1,4,7,16
+I (4-spot): 6,11,12,16
+J (4-spot): 7,11,13,14
+K (4-spot): 2,5,14,15
+L (4-spot): 4,6,13,15
+M (4-spot): 4,5,8,13
+N (4-spot): 1,2,10,13
+O (4-spot): 5,7,9,12
+P (4-spot): 3,4,10,14
+Q (4-spot): 1,6,7,8
+R (4-spot): 2,5,6,10
+S (4-spot): 3,5,13,16
+T (4-spot): 2,4,11,16
+
+Mini grids:
+A (4-spot)
+. . . .
+. . X .
+. X . X
+. . X .
+
+B (4-spot)
+. X X .
+. . . .
+X . . X
+. . . .
+
+C (4-spot)
+X . X .
+. . . .
+X . . .
+. . X .
+
+D (4-spot)
+. . . .
+. X . .
+X . X .
+. X . .
+
+E (4-spot)
+. . X .
+. . . X
+. . X .
+. . X .
+
+F (4-spot)
+X . . .
+. . . X
+. . . X
+. X . .
+
+G (4-spot)
+. . . .
+. . . X
+X X . .
+. . . X
+
+H (4-spot)
+X . . X
+. . X .
+. . . .
+. . . X
+
+I (4-spot)
+. . . .
+. X . .
+. . X X
+. . . X
+
+J (4-spot)
+. . . .
+. . X .
+. . X .
+X X . .
+
+K (4-spot)
+. X . .
+X . . .
+. . . .
+. X X .
+
+L (4-spot)
+. . . X
+. X . .
+. . . .
+X . X .
+
+M (4-spot)
+. . . X
+X . . X
+. . . .
+X . . .
+
+N (4-spot)
+X X . .
+. . . .
+. X . .
+X . . .
+
+O (4-spot)
+. . . .
+X . X .
+X . . X
+. . . .
+
+P (4-spot)
+. . X X
+. . . .
+. X . .
+. X . .
+
+Q (4-spot)
+X . . .
+. X X X
+. . . .
+. . . .
+
+R (4-spot)
+. X . .
+X X . .
+. X . .
+. . . .
+
+S (4-spot)
+. . X .
+X . . .
+. . . .
+X . . X
+
+T (4-spot)
+. X . X
+. . . .
+. . X .
+. . . X
+
+Coverage notes:
+- Square stack range: 5 to 5 uses.
+- 4 in box: exact hits on 20/1820 cluster shapes; range 0-1 exact cards.
+- 4 in box: near-miss backup range 0-2 cards.
+- 5 in box: exact hits on 240/4368 cluster shapes; range 0-1 exact cards.
+- 5 in box: near-miss backup range 0-4 cards.
+- 6 in box: exact hits on 1306/8008 cluster shapes; range 0-2 exact cards.
+- 6 in box: near-miss backup range 0-5 cards.
+- 7 in box: exact hits on 4128/11440 cluster shapes; range 0-2 exact cards.
+- 7 in box: near-miss backup range 0-7 cards.
+- 8 in box: exact hits on 8101/12870 cluster shapes; range 0-3 exact cards.
+- 8 in box: near-miss backup range 0-9 cards.
+
+========================================================================
+4X4 5-SPOT / 20 CARDS
+
+Position template:
+ 1  2  3  4
+ 5  6  7  8
+ 9 10 11 12
+13 14 15 16
+
+Cards:
+A (5-spot): 3,4,5,11,14
+B (5-spot): 1,2,3,6,8
+C (5-spot): 5,9,12,13,15
+D (5-spot): 1,3,5,9,16
+E (5-spot): 1,4,8,15,16
+F (5-spot): 4,6,9,13,16
+G (5-spot): 6,8,12,14,15
+H (5-spot): 2,5,6,7,11
+I (5-spot): 2,5,8,12,16
+J (5-spot): 1,4,7,11,13
+K (5-spot): 1,5,10,13,14
+L (5-spot): 10,11,12,14,16
+M (5-spot): 3,7,13,14,16
+N (5-spot): 4,6,7,10,12
+O (5-spot): 1,2,7,9,15
+P (5-spot): 3,5,7,8,10
+Q (5-spot): 6,9,10,11,15
+R (5-spot): 2,3,4,9,12
+S (5-spot): 2,8,10,11,13
+T (5-spot): 2,4,10,14,15
+
+Mini grids:
+A (5-spot)
+. . X X
+X . . .
+. . X .
+. X . .
+
+B (5-spot)
+X X X .
+. X . X
+. . . .
+. . . .
+
+C (5-spot)
+. . . .
+X . . .
+X . . X
+X . X .
+
+D (5-spot)
+X . X .
+X . . .
+X . . .
+. . . X
+
+E (5-spot)
+X . . X
+. . . X
+. . . .
+. . X X
+
+F (5-spot)
+. . . X
+. X . .
+X . . .
+X . . X
+
+G (5-spot)
+. . . .
+. X . X
+. . . X
+. X X .
+
+H (5-spot)
+. X . .
+X X X .
+. . X .
+. . . .
+
+I (5-spot)
+. X . .
+X . . X
+. . . X
+. . . X
+
+J (5-spot)
+X . . X
+. . X .
+. . X .
+X . . .
+
+K (5-spot)
+X . . .
+X . . .
+. X . .
+X X . .
+
+L (5-spot)
+. . . .
+. . . .
+. X X X
+. X . X
+
+M (5-spot)
+. . X .
+. . X .
+. . . .
+X X . X
+
+N (5-spot)
+. . . X
+. X X .
+. X . X
+. . . .
+
+O (5-spot)
+X X . .
+. . X .
+X . . .
+. . X .
+
+P (5-spot)
+. . X .
+X . X X
+. X . .
+. . . .
+
+Q (5-spot)
+. . . .
+. X . .
+X X X .
+. . X .
+
+R (5-spot)
+. X X X
+. . . .
+X . . X
+. . . .
+
+S (5-spot)
+. X . .
+. . . X
+. X X .
+X . . .
+
+T (5-spot)
+. X . X
+. . . .
+. X . .
+. X X .
+
+Coverage notes:
+- Square stack range: 6 to 7 uses.
+- 5 in box: exact hits on 20/4368 cluster shapes; range 0-1 exact cards.
+- 5 in box: near-miss backup range 0-1 cards.
+- 6 in box: exact hits on 220/8008 cluster shapes; range 0-1 exact cards.
+- 6 in box: near-miss backup range 0-3 cards.
+- 7 in box: exact hits on 1100/11440 cluster shapes; range 0-1 exact cards.
+- 7 in box: near-miss backup range 0-5 cards.
+- 8 in box: exact hits on 3211/12870 cluster shapes; range 0-2 exact cards.
+- 8 in box: near-miss backup range 0-6 cards.
+- 9 in box: exact hits on 5814/11440 cluster shapes; range 0-3 exact cards.
+- 9 in box: near-miss backup range 0-9 cards.
+
+========================================================================
+4X4 MIXED / 10 FOUR-SPOTS + 10 FIVE-SPOTS
+
+Position template:
+ 1  2  3  4
+ 5  6  7  8
+ 9 10 11 12
+13 14 15 16
+
+Cards:
+A (4-spot): 5,10,11,13
+B (4-spot): 3,4,10,14
+C (4-spot): 1,4,15,16
+D (4-spot): 1,7,13,14
+E (4-spot): 2,11,14,15
+F (4-spot): 1,2,5,12
+G (4-spot): 2,8,13,16
+H (4-spot): 8,9,11,12
+I (4-spot): 1,6,8,10
+J (4-spot): 6,7,12,16
+K (5-spot): 3,7,10,12,15
+L (5-spot): 2,4,7,9,10
+M (5-spot): 5,6,9,14,16
+N (5-spot): 2,3,6,9,15
+O (5-spot): 3,4,5,7,9
+P (5-spot): 7,8,9,14,15
+Q (5-spot): 3,4,6,12,13
+R (5-spot): 2,4,6,7,11
+S (5-spot): 1,3,9,11,16
+T (5-spot): 3,5,8,15,16
+
+Mini grids:
+A (4-spot)
+. . . .
+X . . .
+. X X .
+X . . .
+
+B (4-spot)
+. . X X
+. . . .
+. X . .
+. X . .
+
+C (4-spot)
+X . . X
+. . . .
+. . . .
+. . X X
+
+D (4-spot)
+X . . .
+. . X .
+. . . .
+X X . .
+
+E (4-spot)
+. X . .
+. . . .
+. . X .
+. X X .
+
+F (4-spot)
+X X . .
+X . . .
+. . . X
+. . . .
+
+G (4-spot)
+. X . .
+. . . X
+. . . .
+X . . X
+
+H (4-spot)
+. . . .
+. . . X
+X . X X
+. . . .
+
+I (4-spot)
+X . . .
+. X . X
+. X . .
+. . . .
+
+J (4-spot)
+. . . .
+. X X .
+. . . X
+. . . X
+
+K (5-spot)
+. . X .
+. . X .
+. X . X
+. . X .
+
+L (5-spot)
+. X . X
+. . X .
+X X . .
+. . . .
+
+M (5-spot)
+. . . .
+X X . .
+X . . .
+. X . X
+
+N (5-spot)
+. X X .
+. X . .
+X . . .
+. . X .
+
+O (5-spot)
+. . X X
+X . X .
+X . . .
+. . . .
+
+P (5-spot)
+. . . .
+. . X X
+X . . .
+. X X .
+
+Q (5-spot)
+. . X X
+. X . .
+. . . X
+X . . .
+
+R (5-spot)
+. X . X
+. X X .
+. . X .
+. . . .
+
+S (5-spot)
+X . X .
+. . . .
+X . X .
+. . . X
+
+T (5-spot)
+. . X .
+X . . X
+. . . .
+. . X X
+
+Coverage notes:
+- Square stack range: 4 to 7 uses.
+- 4 in box: 10/1820 exact 4-spot shapes covered; range 0-1 exact cards.
+- 4 in box: near-miss backup range 0-1 cards.
+- 5 in box: exact hits on 130/4368 cluster shapes; range 0-1 exact cards.
+- 5 in box: near-miss backup range 0-3 cards.
+- 6 in box: exact hits on 770/8008 cluster shapes; range 0-1 exact cards.
+- 6 in box: near-miss backup range 0-4 cards.
+- 7 in box: exact hits on 2696/11440 cluster shapes; range 0-2 exact cards.
+- 7 in box: near-miss backup range 0-6 cards.
+- 8 in box: exact hits on 6006/12870 cluster shapes; range 0-3 exact cards.
+- 8 in box: near-miss backup range 0-8 cards.
+- 9 in box: exact hits on 8529/11440 cluster shapes; range 0-3 exact cards.
+- 9 in box: near-miss backup range 0-11 cards.

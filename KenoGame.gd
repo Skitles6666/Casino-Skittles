@@ -14,8 +14,8 @@ const SHOW_CASINO_GAME_TABS := true
 const CARD_COUNT := 20
 const NUMBER_MAX := 80
 const DRAW_COUNT := 20
-const MAX_PICKS_PER_CARD := 10
-const KENO_STARTING_CREDITS := 1000.0
+const MAX_PICKS_PER_CARD := 15
+const KENO_STARTING_CREDITS := 10000.0
 const SAVED_KENO_PATTERN_COUNT := 12
 const SAVED_KENO_PATTERNS_PATH := "user://keno_pick_patterns.cfg"
 const SAVED_KENO_GROUP_COUNT := 50
@@ -41,16 +41,18 @@ const KENO_BOARD_IMAGE := "res://assets/keno_card.png"
 const KENO_BOARD_REFERENCE_SIZE := Vector2(4401.0, 2741.0)
 const KENO_BOARD_DISPLAY_SIZE := Vector2(1600.0, 996.0)
 const KENO_BOARD_COL_EDGES := [
-	1340.0, 1640.0, 1940.0, 2240.0, 2540.0,
-	2840.0, 3140.0, 3440.0, 3740.0, 4040.0, 4340.0,
+	1206.0, 1527.0, 1848.0, 2169.0, 2489.0,
+	2810.0, 3131.0, 3452.0, 3771.0, 4088.0, 4401.0,
 ]
+const KENO_CARD_ROW_TOPS := [22.0, 156.0]
+const KENO_CARD_ROW_BOTTOMS := [156.0, 290.0]
 const KENO_BOARD_ROW_TOPS := [
-	480.0, 697.0, 898.0, 1100.0,
-	1440.0, 1641.0, 1842.0, 2043.0,
+	290.0, 536.0, 784.0, 1032.0,
+	1279.0, 1527.0, 1775.0, 2023.0,
 ]
 const KENO_BOARD_ROW_BOTTOMS := [
-	688.0, 889.0, 1091.0, 1292.0,
-	1632.0, 1832.0, 2033.0, 2234.0,
+	536.0, 784.0, 1032.0, 1279.0,
+	1527.0, 1775.0, 2023.0, 2309.0,
 ]
 const KENO_CURRENT_VALUE_RECT := Rect2(760.0, 80.0, 280.0, 110.0)
 const KENO_PATTERN_VALUE_RECT := Rect2(2120.0, 1315.0, 1600.0, 90.0)
@@ -59,7 +61,7 @@ const KENO_BOTTOM_CARDS_PLAYED_RECT := Rect2(1910.0, 2392.0, 600.0, 135.0)
 const KENO_BOTTOM_BET_RECT := Rect2(2575.0, 2392.0, 500.0, 135.0)
 const KENO_BOTTOM_CREDIT_RECT := Rect2(3440.0, 2392.0, 790.0, 135.0)
 const KENO_SUMMARY_ROW_START_Y := 342.0
-const KENO_SUMMARY_ROW_STEP_Y := 86.5
+const KENO_SUMMARY_ROW_STEP_Y := 90.25
 const KENO_SUMMARY_BET_X := 325.0
 const KENO_SUMMARY_MARKED_X := 594.0
 const KENO_SUMMARY_HIT_X := 858.0
@@ -84,6 +86,8 @@ const KENO_WHEEL_3X3_4 := 2
 const KENO_WHEEL_4X4_4 := 3
 const KENO_WHEEL_4X4_5 := 4
 const KENO_WHEEL_4X4_MIXED := 5
+const KENO_OPTIMIZER_OVERLAP_COVER := 0
+const KENO_OPTIMIZER_AREA_COVER := 1
 
 const KENO_3X3_5_SPOT_COVERAGE_PATTERNS := [
 	[0, 1, 2, 3, 7],
@@ -213,12 +217,14 @@ const PAYOUT_TABLE := {
 	10: {0: 2,  4: 2, 5: 5, 6: 20, 7: 80, 8: 500, 9: 5000, 10: 10000},
 }
 const POKER_HAND_SIZE := 5
-const POKER_STARTING_CREDITS := 100.0
+const POKER_STARTING_CREDITS := 10000.0
 const POKER_SUITS := ["S", "H", "D", "C"]
 const POKER_RANKS := [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 const POKER_CARD_DIR := "res://cards"
 const POKER_CARD_DISPLAY_SIZE := Vector2(230, 345)
 const POKER_CARD_ROTATIONS := [-4.0, -1.8, 0.0, 1.8, 4.0]
+const POKER_SPIN_STEPS := 14
+const POKER_SPIN_STEP_SECONDS := 0.045
 const SPIN_POKER_ROWS := 3
 const SPIN_POKER_CENTER_ROW := 1
 const SPIN_POKER_LINE_PATTERNS := [
@@ -450,7 +456,9 @@ var saved_pattern_option: OptionButton
 var saved_group_option: OptionButton
 var saved_group_name_edit: LineEdit
 var coverage_wheel_option: OptionButton
-var patch_size_option: OptionButton
+var optimizer_mode_option: OptionButton
+var grid_width_spin: SpinBox
+var grid_height_spin: SpinBox
 var optimizer_pick_count_spin: SpinBox
 var batch_run_count_spin: SpinBox
 var run_group_button: Button
@@ -511,6 +519,7 @@ var poker_status_label: Label
 var poker_tip_label: Label
 var poker_result_label: Label
 var poker_paytable_label: Label
+var poker_line_payout_label: Label
 var poker_card_grid: GridContainer
 var poker_card_buttons := []
 var poker_card_textures: Dictionary = {}
@@ -524,6 +533,8 @@ var poker_hands_played := 0
 var poker_total_wagered := 0.0
 var poker_total_paid := 0.0
 var poker_waiting_for_draw := false
+var poker_spin_in_progress := false
+var poker_last_line_results := []
 var blackjack_bet_spin: SpinBox
 var blackjack_deal_button: Button
 var blackjack_hit_button: Button
@@ -1519,8 +1530,8 @@ func _build_keno_group_bar() -> Control:
 
 	coverage_wheel_option = OptionButton.new()
 	coverage_wheel_option.custom_minimum_size = Vector2(170, 28)
-	coverage_wheel_option.tooltip_text = "Coverage wheel to build into all 20 cards."
-	coverage_wheel_option.add_item("Auto wheel", KENO_WHEEL_AUTO)
+	coverage_wheel_option.tooltip_text = "Choose a flexible Auto grid or a preset coverage wheel to build into all 20 cards."
+	coverage_wheel_option.add_item("Auto grid", KENO_WHEEL_AUTO)
 	coverage_wheel_option.add_item("3x3 5-spot wheel", KENO_WHEEL_3X3_5)
 	coverage_wheel_option.add_item("3x3 4-spot wheel", KENO_WHEEL_3X3_4)
 	coverage_wheel_option.add_item("4x4 4-spot wheel", KENO_WHEEL_4X4_4)
@@ -1529,13 +1540,37 @@ func _build_keno_group_bar() -> Control:
 	coverage_wheel_option.item_selected.connect(_on_coverage_wheel_selected)
 	bar.add_child(coverage_wheel_option)
 
-	patch_size_option = OptionButton.new()
-	patch_size_option.custom_minimum_size = Vector2(112, 28)
-	patch_size_option.tooltip_text = "Patch size for the optimizer."
-	patch_size_option.add_item("Best 4x4 patch", 4)
-	patch_size_option.add_item("Best 3x3 patch", 3)
-	patch_size_option.select(1)
-	bar.add_child(patch_size_option)
+	optimizer_mode_option = OptionButton.new()
+	optimizer_mode_option.custom_minimum_size = Vector2(128, 28)
+	optimizer_mode_option.tooltip_text = "How Auto wheel builds the 20 cards."
+	optimizer_mode_option.add_item("Overlap + cover", KENO_OPTIMIZER_OVERLAP_COVER)
+	optimizer_mode_option.add_item("Most area", KENO_OPTIMIZER_AREA_COVER)
+	optimizer_mode_option.select(1)
+	bar.add_child(optimizer_mode_option)
+
+	var grid_label := Label.new()
+	grid_label.text = "Grid"
+	grid_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	grid_label.add_theme_color_override("font_color", Color("#cad1df"))
+	bar.add_child(grid_label)
+
+	grid_width_spin = SpinBox.new()
+	grid_width_spin.min_value = 1.0
+	grid_width_spin.max_value = 10.0
+	grid_width_spin.step = 1.0
+	grid_width_spin.value = 4.0
+	grid_width_spin.custom_minimum_size = Vector2(48, 28)
+	grid_width_spin.tooltip_text = "Grid width in board columns for Auto wheel."
+	bar.add_child(grid_width_spin)
+
+	grid_height_spin = SpinBox.new()
+	grid_height_spin.min_value = 1.0
+	grid_height_spin.max_value = 8.0
+	grid_height_spin.step = 1.0
+	grid_height_spin.value = 3.0
+	grid_height_spin.custom_minimum_size = Vector2(48, 28)
+	grid_height_spin.tooltip_text = "Grid height in board rows for Auto wheel."
+	bar.add_child(grid_height_spin)
 
 	var optimizer_spots_label := Label.new()
 	optimizer_spots_label.text = "Spots"
@@ -1554,7 +1589,7 @@ func _build_keno_group_bar() -> Control:
 
 	var best_group_button := Button.new()
 	best_group_button.text = "Build"
-	best_group_button.tooltip_text = "Build the selected coverage wheel in the best current patch, save it as a group, and write a cheat sheet."
+	best_group_button.tooltip_text = "Build the selected grid or coverage wheel, save it as a group, and write a cheat sheet."
 	best_group_button.custom_minimum_size = Vector2(56, 28)
 	best_group_button.pressed.connect(_on_build_best_group_pressed)
 	_apply_button_text_depth(best_group_button)
@@ -1744,6 +1779,7 @@ func _build_keno_card_overlays() -> void:
 
 	keno_current_value_label = _add_keno_card_label(KENO_CURRENT_VALUE_RECT, 72, Color("#007a76"), HORIZONTAL_ALIGNMENT_CENTER, Color("#000000"))
 	keno_pattern_value_label = _add_keno_card_label(KENO_PATTERN_VALUE_RECT, 34, Color("#000000"), HORIZONTAL_ALIGNMENT_CENTER, Color("#fff200"))
+	keno_pattern_value_label.visible = false
 	keno_bottom_win_label = _add_keno_card_label(KENO_BOTTOM_WIN_RECT, 58, Color("#000000"), HORIZONTAL_ALIGNMENT_CENTER, Color("#f6f0df"))
 	keno_bottom_cards_played_label = _add_keno_card_label(KENO_BOTTOM_CARDS_PLAYED_RECT, 58, Color("#000000"), HORIZONTAL_ALIGNMENT_CENTER, Color("#f6f0df"))
 	keno_bottom_bet_label = _add_keno_card_label(KENO_BOTTOM_BET_RECT, 58, Color("#000000"), HORIZONTAL_ALIGNMENT_CENTER, Color("#f6f0df"))
@@ -1752,7 +1788,11 @@ func _build_keno_card_overlays() -> void:
 	for i in CARD_COUNT:
 		var row := 0 if i < 10 else 1
 		var column := i if i < 10 else i - 10
-		var button_rect := Rect2(1384.0 + float(column) * 300.0, 82.0 + float(row) * 203.0, 236.0, 136.0)
+		var left := float(KENO_BOARD_COL_EDGES[column])
+		var right := float(KENO_BOARD_COL_EDGES[column + 1])
+		var top := float(KENO_CARD_ROW_TOPS[row])
+		var bottom := float(KENO_CARD_ROW_BOTTOMS[row])
+		var button_rect := Rect2(left, top, right - left, bottom - top)
 		var button := Button.new()
 		button.text = ""
 		button.toggle_mode = true
@@ -2011,15 +2051,11 @@ func _build_poker_table_panel() -> Control:
 	_apply_text_depth(poker_status_label)
 	machine_header.add_child(poker_status_label)
 
-	var card_scroll := ScrollContainer.new()
-	card_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_child(card_scroll)
-
 	var card_center := CenterContainer.new()
 	card_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card_center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	card_scroll.add_child(card_center)
+	card_center.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	card_center.custom_minimum_size = Vector2(0, 430)
+	layout.add_child(card_center)
 
 	poker_card_grid = GridContainer.new()
 	poker_card_grid.columns = POKER_HAND_SIZE
@@ -2044,26 +2080,38 @@ func _build_poker_table_panel() -> Control:
 		poker_card_grid.add_child(button)
 
 	var pay_action_row := HBoxContainer.new()
+	pay_action_row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pay_action_row.add_theme_constant_override("separation", 12)
 	layout.add_child(pay_action_row)
 
 	poker_paytable_label = Label.new()
 	poker_paytable_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	poker_paytable_label.custom_minimum_size = Vector2(560, 88)
+	poker_paytable_label.custom_minimum_size = Vector2(500, 78)
 	poker_paytable_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	poker_paytable_label.add_theme_font_size_override("font_size", 13)
+	poker_paytable_label.add_theme_font_size_override("font_size", 12)
 	poker_paytable_label.add_theme_color_override("font_color", Color("#f6f0df"))
 	_apply_text_depth(poker_paytable_label)
 	pay_action_row.add_child(poker_paytable_label)
 
+	poker_line_payout_label = Label.new()
+	poker_line_payout_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	poker_line_payout_label.custom_minimum_size = Vector2(360, 78)
+	poker_line_payout_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	poker_line_payout_label.add_theme_font_size_override("font_size", 12)
+	poker_line_payout_label.add_theme_color_override("font_color", Color("#cad1df"))
+	_apply_text_depth(poker_line_payout_label)
+	pay_action_row.add_child(poker_line_payout_label)
+
 	var action_row := HBoxContainer.new()
 	action_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	action_row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	action_row.add_theme_constant_override("separation", 10)
 	pay_action_row.add_child(action_row)
 
 	poker_deal_button = Button.new()
 	poker_deal_button.text = "DEAL"
-	poker_deal_button.custom_minimum_size = Vector2(140, 58)
+	poker_deal_button.custom_minimum_size = Vector2(124, 50)
+	poker_deal_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	poker_deal_button.pressed.connect(_on_poker_deal_pressed)
 	poker_deal_button.add_theme_font_size_override("font_size", 20)
 	_apply_button_text_depth(poker_deal_button)
@@ -2071,7 +2119,8 @@ func _build_poker_table_panel() -> Control:
 
 	poker_draw_button = Button.new()
 	poker_draw_button.text = "SPIN"
-	poker_draw_button.custom_minimum_size = Vector2(140, 58)
+	poker_draw_button.custom_minimum_size = Vector2(124, 50)
+	poker_draw_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	poker_draw_button.pressed.connect(_on_poker_draw_pressed)
 	poker_draw_button.add_theme_font_size_override("font_size", 20)
 	_apply_button_text_depth(poker_draw_button)
@@ -2081,7 +2130,7 @@ func _build_poker_table_panel() -> Control:
 	poker_tip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	poker_tip_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	poker_tip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	poker_tip_label.add_theme_font_size_override("font_size", 18)
+	poker_tip_label.add_theme_font_size_override("font_size", 15)
 	poker_tip_label.add_theme_color_override("font_color", Color("#c9f3df"))
 	_apply_text_depth(poker_tip_label)
 	layout.add_child(poker_tip_label)
@@ -2089,7 +2138,7 @@ func _build_poker_table_panel() -> Control:
 	poker_result_label = Label.new()
 	poker_result_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	poker_result_label.size_flags_vertical = Control.SIZE_SHRINK_END
-	poker_result_label.add_theme_font_size_override("font_size", 18)
+	poker_result_label.add_theme_font_size_override("font_size", 15)
 	poker_result_label.add_theme_color_override("font_color", Color("#f5d067"))
 	_apply_text_depth(poker_result_label)
 	layout.add_child(poker_result_label)
@@ -4330,6 +4379,9 @@ func _on_roulette_reset_pressed() -> void:
 
 
 func _on_poker_deal_pressed() -> void:
+	if poker_spin_in_progress:
+		poker_result_label.text = "The wheel is still spinning."
+		return
 	if poker_waiting_for_draw:
 		poker_result_label.text = "Spin this hand before dealing again."
 		return
@@ -4350,6 +4402,7 @@ func _on_poker_deal_pressed() -> void:
 	poker_cards.clear()
 	poker_hands.clear()
 	poker_hold.clear()
+	poker_last_line_results.clear()
 	for i in POKER_HAND_SIZE:
 		poker_cards.append(_draw_poker_card())
 		poker_hold.append(false)
@@ -4368,38 +4421,53 @@ func _on_poker_deal_pressed() -> void:
 
 
 func _on_poker_draw_pressed() -> void:
+	if poker_spin_in_progress:
+		return
 	if not poker_waiting_for_draw:
 		return
 
 	var bet := float(poker_bet_spin.value)
 	var total_payout := 0.0
-	var win_lines := []
 	var draw_deck := _build_poker_deck_excluding(poker_cards)
 	draw_deck.shuffle()
+	var final_hands := []
 	for row_index in SPIN_POKER_ROWS:
 		var hand: Array = poker_hands[row_index]
+		var final_hand := []
 		for card_index in POKER_HAND_SIZE:
 			if bool(poker_hold[card_index]):
-				hand[card_index] = poker_cards[card_index]
+				final_hand.append(poker_cards[card_index])
 			else:
-				hand[card_index] = draw_deck.pop_back()
+				final_hand.append(draw_deck.pop_back())
+		final_hands.append(final_hand)
+
+	poker_result_label.text = "Spinning..."
+	await _animate_spin_poker_wheel(draw_deck)
+	poker_hands = final_hands
 
 	var line_count := _active_poker_line_count()
+	poker_last_line_results.clear()
 	for line_index in line_count:
 		var line_cards := _spin_poker_line_cards(line_index)
 		var result := _evaluate_poker_hand(line_cards)
 		var multiplier := int(result["multiplier"])
 		var payout := bet * float(multiplier)
 		total_payout += payout
-		if payout > 0.0:
-			win_lines.append("Line %d: %s pays %.0fx (+$%.2f)" % [line_index + 1, str(result["hand"]), multiplier, payout])
+		poker_last_line_results.append({
+			"line": line_index + 1,
+			"hand": str(result["hand"]),
+			"multiplier": multiplier,
+			"payout": payout,
+			"pattern": SPIN_POKER_LINE_PATTERNS[line_index].duplicate(),
+		})
 	poker_cards = _duplicate_poker_cards(poker_hands[SPIN_POKER_CENTER_ROW]) if poker_hands.size() > SPIN_POKER_CENTER_ROW else []
 	poker_credits += total_payout
 	poker_total_paid += total_payout
 	poker_waiting_for_draw = false
+	poker_spin_in_progress = false
 
 	if total_payout > 0.0:
-		poker_result_label.text = "Paid $%.2f total.\n%s" % [total_payout, "\n".join(win_lines)]
+		poker_result_label.text = "Paid $%.2f total.\n%s" % [total_payout, _format_poker_winning_line_summary()]
 	else:
 		poker_result_label.text = "No payout across %d active line%s." % [line_count, "" if line_count == 1 else "s"]
 
@@ -4407,7 +4475,7 @@ func _on_poker_draw_pressed() -> void:
 
 
 func _on_poker_card_pressed(index: int) -> void:
-	if not poker_waiting_for_draw or index < 0 or index >= poker_hold.size():
+	if poker_spin_in_progress or not poker_waiting_for_draw or index < 0 or index >= poker_hold.size():
 		return
 
 	poker_hold[index] = not bool(poker_hold[index])
@@ -4425,14 +4493,19 @@ func _on_poker_hand_count_selected(index: int) -> void:
 
 
 func _on_poker_reset_pressed() -> void:
+	if poker_spin_in_progress:
+		poker_result_label.text = "Wait for the current spin to finish before resetting."
+		return
 	poker_credits = POKER_STARTING_CREDITS
 	poker_hands_played = 0
 	poker_total_wagered = 0.0
 	poker_total_paid = 0.0
 	poker_waiting_for_draw = false
+	poker_spin_in_progress = false
 	poker_cards.clear()
 	poker_hands.clear()
 	poker_hold.clear()
+	poker_last_line_results.clear()
 	poker_result_label.text = "Credits reset. Deal the middle row to start Spin Poker."
 	_refresh_poker()
 
@@ -5402,13 +5475,16 @@ func _on_build_best_group_pressed() -> void:
 
 func _build_best_keno_group_for_wheel(wheel_id: int) -> Dictionary:
 	if wheel_id == KENO_WHEEL_AUTO:
-		var patch_size := _get_selected_patch_size()
-		var pick_count := _get_selected_optimizer_pick_count(patch_size)
-		var auto_best := _build_best_keno_group_for_patch_size(patch_size, pick_count)
-		auto_best["wheel_name"] = "Auto %dx%d %d-spot patch" % [
-			patch_size,
-			patch_size,
+		var grid_width := _get_selected_grid_width()
+		var grid_height := _get_selected_grid_height()
+		var pick_count := _get_selected_optimizer_pick_count(grid_width * grid_height)
+		var optimizer_mode := _get_selected_optimizer_mode()
+		var auto_best := _build_best_keno_group_for_grid(grid_width, grid_height, pick_count, optimizer_mode)
+		auto_best["wheel_name"] = "Auto %dx%d %d-spot %s" % [
+			grid_width,
+			grid_height,
 			int(auto_best["pick_count"]),
+			str(auto_best["strategy_short_name"]),
 		]
 		auto_best["spot_label"] = "%d-spot" % int(auto_best["pick_count"])
 		return auto_best
@@ -5722,10 +5798,34 @@ func _sanitize_keno_pick_list(values) -> Array:
 	return picks
 
 
-func _get_selected_patch_size() -> int:
-	if patch_size_option == null or patch_size_option.selected < 0:
+func _get_selected_grid_width() -> int:
+	if grid_width_spin == null:
+		return 4
+	return clampi(int(grid_width_spin.value), 1, 10)
+
+
+func _get_selected_grid_height() -> int:
+	if grid_height_spin == null:
 		return 3
-	return clampi(patch_size_option.get_selected_id(), 3, 4)
+	return clampi(int(grid_height_spin.value), 1, 8)
+
+
+func _get_selected_optimizer_mode() -> int:
+	if optimizer_mode_option == null or optimizer_mode_option.selected < 0:
+		return KENO_OPTIMIZER_AREA_COVER
+	return int(optimizer_mode_option.get_selected_id())
+
+
+func _optimizer_strategy_name(optimizer_mode: int) -> String:
+	if optimizer_mode == KENO_OPTIMIZER_AREA_COVER:
+		return "Most area, least forced overlap"
+	return "Most overlap while covering the grid"
+
+
+func _optimizer_strategy_short_name(optimizer_mode: int) -> String:
+	if optimizer_mode == KENO_OPTIMIZER_AREA_COVER:
+		return "area"
+	return "overlap"
 
 
 func _get_selected_coverage_wheel_id() -> int:
@@ -5737,19 +5837,25 @@ func _get_selected_coverage_wheel_id() -> int:
 func _on_coverage_wheel_selected(_index: int) -> void:
 	var wheel_id := _get_selected_coverage_wheel_id()
 	if wheel_id == KENO_WHEEL_AUTO:
-		if patch_size_option != null:
-			patch_size_option.disabled = false
+		if optimizer_mode_option != null:
+			optimizer_mode_option.disabled = false
+		if grid_width_spin != null:
+			grid_width_spin.editable = true
+		if grid_height_spin != null:
+			grid_height_spin.editable = true
 		if optimizer_pick_count_spin != null:
 			optimizer_pick_count_spin.editable = true
 		return
 
 	var config := _get_coverage_wheel_config(wheel_id)
-	if patch_size_option != null:
-		patch_size_option.disabled = true
-		for i in patch_size_option.item_count:
-			if int(patch_size_option.get_item_id(i)) == int(config["patch_size"]):
-				patch_size_option.select(i)
-				break
+	if optimizer_mode_option != null:
+		optimizer_mode_option.disabled = true
+	if grid_width_spin != null:
+		grid_width_spin.editable = false
+		grid_width_spin.value = float(config["patch_size"])
+	if grid_height_spin != null:
+		grid_height_spin.editable = false
+		grid_height_spin.value = float(config["patch_size"])
 	if optimizer_pick_count_spin != null:
 		optimizer_pick_count_spin.editable = false
 		var common_count := _common_pattern_pick_count(config["patterns"])
@@ -5796,8 +5902,8 @@ func _get_coverage_wheel_config(wheel_id: int) -> Dictionary:
 	}
 
 
-func _get_selected_optimizer_pick_count(patch_size: int) -> int:
-	var max_spots := mini(MAX_PICKS_PER_CARD, patch_size * patch_size)
+func _get_selected_optimizer_pick_count(max_available_spots: int) -> int:
+	var max_spots := mini(MAX_PICKS_PER_CARD, max_available_spots)
 	if optimizer_pick_count_spin == null:
 		return clampi(KENO_DEFAULT_OPTIMIZER_PICK_COUNT, 1, max_spots)
 	return clampi(int(optimizer_pick_count_spin.value), 1, max_spots)
@@ -5822,6 +5928,36 @@ func _build_best_keno_group_for_patch_size(patch_size: int, requested_pick_count
 		"cards": cards,
 		"pick_count": pick_count,
 		"expected_multiplier": _expected_payout_multiplier(pick_count),
+	}
+
+
+func _build_best_keno_group_for_grid(grid_width: int, grid_height: int, requested_pick_count: int, optimizer_mode: int) -> Dictionary:
+	grid_width = clampi(grid_width, 1, 10)
+	grid_height = clampi(grid_height, 1, 8)
+	var best_grid := _find_best_grid(grid_width, grid_height)
+	var grid_numbers: Array = best_grid["numbers"]
+	var pick_count := clampi(requested_pick_count, 1, mini(MAX_PICKS_PER_CARD, grid_numbers.size()))
+	var cards := _build_optimizer_grid_cards(
+		grid_numbers,
+		pick_count,
+		int(best_grid["row"]),
+		int(best_grid["column"]),
+		grid_width,
+		grid_height,
+		optimizer_mode
+	)
+	return {
+		"patch_size": mini(grid_width, grid_height),
+		"grid_width": grid_width,
+		"grid_height": grid_height,
+		"row": best_grid["row"],
+		"column": best_grid["column"],
+		"numbers": grid_numbers,
+		"cards": cards,
+		"pick_count": pick_count,
+		"expected_multiplier": _expected_payout_multiplier(pick_count),
+		"strategy_name": _optimizer_strategy_name(optimizer_mode),
+		"strategy_short_name": _optimizer_strategy_short_name(optimizer_mode),
 	}
 
 
@@ -5913,6 +6049,37 @@ func _find_best_patch(patch_size: int) -> Dictionary:
 	return best
 
 
+func _find_best_grid(grid_width: int, grid_height: int) -> Dictionary:
+	grid_width = clampi(grid_width, 1, 10)
+	grid_height = clampi(grid_height, 1, 8)
+	var best := {
+		"score": -INF,
+		"row": 0,
+		"column": 0,
+		"numbers": [],
+	}
+	for row in range(0, 8 - grid_height + 1):
+		for column in range(0, 10 - grid_width + 1):
+			var numbers := _grid_numbers(row, column, grid_width, grid_height)
+			var score := _patch_history_score(numbers) - _grid_center_distance(row, column, grid_width, grid_height) * 0.01
+			if score > float(best["score"]):
+				best = {
+					"score": score,
+					"row": row,
+					"column": column,
+					"numbers": numbers,
+				}
+	return best
+
+
+func _grid_numbers(row: int, column: int, grid_width: int, grid_height: int) -> Array:
+	var numbers := []
+	for r in range(row, row + grid_height):
+		for c in range(column, column + grid_width):
+			numbers.append(r * 10 + c + 1)
+	return numbers
+
+
 func _patch_numbers(row: int, column: int, patch_size: int) -> Array:
 	var numbers := []
 	for r in range(row, row + patch_size):
@@ -5930,6 +6097,12 @@ func _patch_history_score(numbers: Array) -> float:
 
 func _patch_center_distance(row: int, column: int, patch_size: int) -> float:
 	var patch_center := Vector2(float(column) + float(patch_size - 1) * 0.5, float(row) + float(patch_size - 1) * 0.5)
+	var board_center := Vector2(4.5, 3.5)
+	return patch_center.distance_to(board_center)
+
+
+func _grid_center_distance(row: int, column: int, grid_width: int, grid_height: int) -> float:
+	var patch_center := Vector2(float(column) + float(grid_width - 1) * 0.5, float(row) + float(grid_height - 1) * 0.5)
 	var board_center := Vector2(4.5, 3.5)
 	return patch_center.distance_to(board_center)
 
@@ -5993,6 +6166,69 @@ func _build_3x3_5_spot_stack_patterns(patch_numbers: Array) -> Array:
 	return _build_coverage_wheel_cards(patch_numbers, KENO_3X3_5_SPOT_COVERAGE_PATTERNS)
 
 
+func _build_optimizer_grid_cards(grid_numbers: Array, pick_count: int, row: int, column: int, grid_width: int, grid_height: int, optimizer_mode: int) -> Array:
+	var weighted_numbers := grid_numbers.duplicate()
+	weighted_numbers.sort_custom(func(a, b) -> bool:
+		var score_a := _grid_number_weight(int(a), row, column, grid_width, grid_height)
+		var score_b := _grid_number_weight(int(b), row, column, grid_width, grid_height)
+		if is_equal_approx(score_a, score_b):
+			return int(a) < int(b)
+		return score_a > score_b
+	)
+	if optimizer_mode == KENO_OPTIMIZER_AREA_COVER:
+		return _build_area_cover_cards(weighted_numbers, pick_count)
+	return _build_overlap_cover_cards(weighted_numbers, pick_count)
+
+
+func _build_overlap_cover_cards(weighted_numbers: Array, pick_count: int) -> Array:
+	var cards := []
+	if weighted_numbers.is_empty():
+		return cards
+	var shared_count := clampi(pick_count - 2, 0, pick_count)
+	var shared_numbers := weighted_numbers.slice(0, shared_count)
+	var rolling_numbers := weighted_numbers.slice(shared_count)
+	if rolling_numbers.is_empty():
+		rolling_numbers = weighted_numbers.duplicate()
+	for i in CARD_COUNT:
+		var picks := shared_numbers.duplicate()
+		var offset := i % rolling_numbers.size()
+		var cursor := 0
+		while picks.size() < pick_count and cursor < rolling_numbers.size() * 2:
+			var number := int(rolling_numbers[(offset + cursor) % rolling_numbers.size()])
+			if not picks.has(number):
+				picks.append(number)
+			cursor += 1
+		picks.sort()
+		cards.append(picks)
+	return cards
+
+
+func _build_area_cover_cards(weighted_numbers: Array, pick_count: int) -> Array:
+	var cards := []
+	if weighted_numbers.is_empty():
+		return cards
+	var stride := maxi(1, int(ceil(float(weighted_numbers.size()) / float(maxi(1, pick_count)))))
+	for i in CARD_COUNT:
+		var picks := []
+		var cursor := i % weighted_numbers.size()
+		while picks.size() < pick_count:
+			var number := int(weighted_numbers[cursor % weighted_numbers.size()])
+			if not picks.has(number):
+				picks.append(number)
+			cursor += stride
+			if cursor > weighted_numbers.size() * (pick_count + 2):
+				break
+		var fill_cursor := i
+		while picks.size() < pick_count and fill_cursor < weighted_numbers.size() + i:
+			var number := int(weighted_numbers[fill_cursor % weighted_numbers.size()])
+			if not picks.has(number):
+				picks.append(number)
+			fill_cursor += 1
+		picks.sort()
+		cards.append(picks)
+	return cards
+
+
 func _collect_patch_combinations(values: Array, pick_count: int, start: int, current: Array, output: Array) -> void:
 	if current.size() == pick_count:
 		output.append(current.duplicate())
@@ -6009,6 +6245,14 @@ func _patch_number_weight(number: int, row: int, column: int, patch_size: int) -
 	var local_column := int((number - 1) % 10) - column
 	var center := (float(patch_size) - 1.0) * 0.5
 	var distance := Vector2(float(local_column), float(local_row)).distance_to(Vector2(center, center))
+	return float(number_hit_counts[number]) * 100.0 + (10.0 - distance)
+
+
+func _grid_number_weight(number: int, row: int, column: int, grid_width: int, grid_height: int) -> float:
+	var local_row := int((number - 1) / 10) - row
+	var local_column := int((number - 1) % 10) - column
+	var center := Vector2((float(grid_width) - 1.0) * 0.5, (float(grid_height) - 1.0) * 0.5)
+	var distance := Vector2(float(local_column), float(local_row)).distance_to(center)
 	return float(number_hit_counts[number]) * 100.0 + (10.0 - distance)
 
 
@@ -6134,21 +6378,23 @@ func _card_results_for_log(cards: Array) -> String:
 func _write_keno_best_group_cheat_sheet(best: Dictionary, group_index: int, group_name: String) -> String:
 	var lines := []
 	var patch_size := int(best["patch_size"])
+	var grid_width := int(best.get("grid_width", patch_size))
+	var grid_height := int(best.get("grid_height", patch_size))
 	var row := int(best["row"])
 	var column := int(best["column"])
 	var patch_numbers: Array = best["numbers"]
 	var cards: Array = best["cards"]
 	lines.append("20 Card Keno Cheat Sheet")
 	lines.append("Saved group: %d - %s" % [group_index + 1, group_name])
-	lines.append("Patch: %dx%d, rows %d-%d, columns %d-%d" % [
-		patch_size,
-		patch_size,
+	lines.append("Grid: %dx%d, rows %d-%d, columns %d-%d" % [
+		grid_width,
+		grid_height,
 		row + 1,
-		row + patch_size,
+		row + grid_height,
 		column + 1,
-		column + patch_size,
+		column + grid_width,
 	])
-	lines.append("Patch numbers: %s" % _number_list_for_log(patch_numbers))
+	lines.append("Grid numbers: %s" % _number_list_for_log(patch_numbers))
 	lines.append("Cards: %s. Average expected pay multiplier per $1 card: %.4f" % [
 		str(best.get("spot_label", "%d-spot" % int(best.get("pick_count", 0)))),
 		float(best["expected_multiplier"]),
@@ -6162,7 +6408,7 @@ func _write_keno_best_group_cheat_sheet(best: Dictionary, group_index: int, grou
 	lines.append("Copy-ready ticket list")
 	lines.append(_format_keno_ticket_copy_line(cards))
 	lines.append("")
-	lines.append("10 by 8 board map. Numbers in brackets are in the patch.")
+	lines.append("10 by 8 board map. Numbers in brackets are in the grid.")
 	for r in range(0, 8):
 		var row_parts := []
 		for c in range(0, 10):
@@ -6185,7 +6431,7 @@ func _write_keno_best_group_cheat_sheet(best: Dictionary, group_index: int, grou
 		overlap_parts.append("%02d:%d" % [int(number), int(overlap_counts[number])])
 	lines.append(", ".join(overlap_parts))
 	lines.append("")
-	lines.append("Note: Keno draws are random, so no patch changes the true odds. This sheet favors maximum overlap and the highest payout spot count available inside the chosen patch.")
+	lines.append("Note: Keno draws are random, so no grid changes the true odds. The selected strategy only changes how the card group spreads or overlaps numbers.")
 
 	var file := FileAccess.open(KENO_CHEAT_SHEET_PATH, FileAccess.WRITE)
 	if file != null:
@@ -6230,6 +6476,29 @@ func _display_poker_hand_count() -> int:
 	return 1
 
 
+func _animate_spin_poker_wheel(draw_deck: Array) -> void:
+	poker_spin_in_progress = true
+	_refresh_poker()
+	var sample_deck := draw_deck.duplicate()
+	if sample_deck.is_empty():
+		sample_deck = _build_poker_deck()
+	for step in POKER_SPIN_STEPS:
+		sample_deck.shuffle()
+		for row_index in SPIN_POKER_ROWS:
+			if row_index >= poker_hands.size():
+				continue
+			var hand: Array = poker_hands[row_index]
+			for card_index in POKER_HAND_SIZE:
+				if card_index >= hand.size():
+					continue
+				if card_index < poker_hold.size() and bool(poker_hold[card_index]):
+					hand[card_index] = poker_cards[card_index]
+				else:
+					hand[card_index] = sample_deck[(step + row_index * POKER_HAND_SIZE + card_index) % sample_deck.size()]
+		_refresh_poker()
+		await get_tree().create_timer(POKER_SPIN_STEP_SECONDS).timeout
+
+
 func _refresh_poker_hand_count_option() -> void:
 	if poker_hand_count_option == null:
 		return
@@ -6240,11 +6509,14 @@ func _refresh_poker_hand_count_option() -> void:
 
 
 func _poker_card_size_for_hand_count(hand_count: int) -> Vector2:
+	var viewport_height := get_viewport_rect().size.y
+	if hand_count == SPIN_POKER_ROWS and viewport_height < 1000.0:
+		return Vector2(96, 144)
 	match hand_count:
 		1:
-			return Vector2(160, 240)
+			return Vector2(145, 218)
 		3:
-			return Vector2(125, 188)
+			return Vector2(108, 162)
 		5:
 			return Vector2(96, 144)
 		_:
@@ -6253,6 +6525,8 @@ func _poker_card_size_for_hand_count(hand_count: int) -> Vector2:
 
 func _poker_display_hand_for_index(hand_index: int) -> Array:
 	if hand_index >= 0 and hand_index < poker_hands.size():
+		if poker_spin_in_progress:
+			return poker_hands[hand_index]
 		if poker_waiting_for_draw:
 			var waiting_row := []
 			for card_index in POKER_HAND_SIZE:
@@ -6294,8 +6568,12 @@ func _refresh_poker() -> void:
 	poker_deal_button.disabled = poker_waiting_for_draw
 	poker_draw_button.disabled = not poker_waiting_for_draw
 	poker_bet_spin.editable = not poker_waiting_for_draw
+	if poker_spin_in_progress:
+		poker_deal_button.disabled = true
+		poker_draw_button.disabled = true
+		poker_bet_spin.editable = false
 	if poker_hand_count_option != null:
-		poker_hand_count_option.disabled = poker_waiting_for_draw
+		poker_hand_count_option.disabled = poker_waiting_for_draw or poker_spin_in_progress
 		_refresh_poker_hand_count_option()
 	_refresh_poker_action_button_styles()
 
@@ -6307,12 +6585,14 @@ func _refresh_poker() -> void:
 	if poker_hands.is_empty():
 		poker_status_label.text = "Deal the middle row for %d active line%s." % [active_line_count, "" if active_line_count == 1 else "s"]
 	else:
-		poker_status_label.text = "Choose holds on the middle row; held cards copy to the top and bottom rows." if poker_waiting_for_draw else "Spin complete. Deal again when ready."
+		poker_status_label.text = "Wheel spinning..." if poker_spin_in_progress else ("Choose holds on the middle row; held cards copy to the top and bottom rows." if poker_waiting_for_draw else "Spin complete. Deal again when ready.")
 
 	var tip := _get_poker_strategy_tip(poker_cards) if poker_waiting_for_draw else {}
 	var suggested_holds: Array = tip.get("holds", [])
 	if poker_tip_label != null:
-		if poker_waiting_for_draw and not tip.is_empty():
+		if poker_spin_in_progress:
+			poker_tip_label.text = "Tip: watch the active payout lines after the spin lands."
+		elif poker_waiting_for_draw and not tip.is_empty():
 			poker_tip_label.text = str(tip["text"])
 		elif poker_hands.is_empty():
 			poker_tip_label.text = "Tip: deal a hand to get a hold suggestion."
@@ -6329,7 +6609,7 @@ func _refresh_poker() -> void:
 			card = display_hand[card_index]
 		var has_card: bool = not card.is_empty()
 		var visible_slot: bool = hand_index < max(1, display_hand_count)
-		var can_choose_hold := has_card and poker_waiting_for_draw
+		var can_choose_hold := has_card and poker_waiting_for_draw and not poker_spin_in_progress
 		button.visible = visible_slot
 		button.disabled = not has_card
 		button.mouse_filter = Control.MOUSE_FILTER_STOP if can_choose_hold else Control.MOUSE_FILTER_IGNORE
@@ -6340,28 +6620,35 @@ func _refresh_poker() -> void:
 		button.rotation_degrees = 0.0 if display_hand_count > 1 else (POKER_CARD_ROTATIONS[card_index] if card_index < POKER_CARD_ROTATIONS.size() else 0.0)
 		button.scale = Vector2(1.0, 1.0)
 		if has_card:
-			var held: bool = bool(poker_hold[card_index])
+			var held: bool = card_index < poker_hold.size() and bool(poker_hold[card_index])
 			var texture := _get_poker_card_texture(card)
 			var suit_color := _poker_suit_color(str(card["suit"]))
 			var bg := Color("#f7f1e7") if not held else Color("#ffdc74")
 			var border := suit_color if not held else Color("#fff7c9")
 			var suggested: bool = poker_waiting_for_draw and suggested_holds.has(card_index)
+			var winning_line_card := _poker_cell_is_in_winning_line(hand_index, card_index)
 			if suggested and not held:
 				border = Color("#69e3ff")
+			if winning_line_card:
+				bg = Color("#fff1a8")
+				border = Color("#f5d067")
 			if held and display_hand_count <= 5:
 				button.scale = Vector2(1.035, 1.035)
+			if winning_line_card and display_hand_count <= 5:
+				button.scale = Vector2(1.05, 1.05)
 			if texture != null:
 				button.icon = texture
 				button.text = ""
 			else:
 				button.icon = null
 				button.text = "%s\n%s" % [_rank_label(int(card["rank"])), str(card["suit"])]
-			button.tooltip_text = "%s of %s%s" % [
+			button.tooltip_text = "%s of %s%s%s" % [
 				_rank_label(int(card["rank"])),
 				_poker_suit_name(str(card["suit"])),
 				" held" if held else "",
+				" on winning line" if winning_line_card else "",
 			]
-			button.add_theme_stylebox_override("normal", _poker_card_style(bg, border, 4 if suggested or held else 2, held or suggested))
+			button.add_theme_stylebox_override("normal", _poker_card_style(bg, border, 5 if winning_line_card else (4 if suggested or held else 2), held or suggested or winning_line_card))
 			button.add_theme_stylebox_override("hover", _poker_card_style(bg.lightened(0.04), Color("#ffffff"), 4, true))
 			button.add_theme_stylebox_override("pressed", _poker_card_style(bg.darkened(0.04), Color("#ffffff"), 4, true, true))
 			button.add_theme_color_override("font_color", suit_color)
@@ -6378,6 +6665,8 @@ func _refresh_poker() -> void:
 		_apply_button_text_depth(button)
 
 	poker_paytable_label.text = _format_poker_paytable()
+	if poker_line_payout_label != null:
+		poker_line_payout_label.text = _format_poker_line_payouts()
 
 
 func _refresh_poker_action_button_styles() -> void:
@@ -7652,31 +7941,33 @@ func _refresh_numbers() -> void:
 			owners = []
 		elif not reveal_all_card_numbers:
 			owners = [selected_card]
-		var bg := Color("#050505")
-		var border := Color("#fff200")
-		var border_width := 2
+		var bg := Color("#00000000")
+		var border := Color("#00000000")
+		var border_width := 0
 
 		if owners.size() == 1:
 			var owner_color: Color = CARD_COLORS[owners[0]]
-			bg = Color(owner_color.r, owner_color.g, owner_color.b, 0.82)
+			bg = Color(owner_color.r, owner_color.g, owner_color.b, 0.45)
 			border = owner_color.lightened(0.45)
 			border_width = 3
 		elif owners.size() > 1:
-			bg = Color(0.78, 0.6, 0.18, 0.88)
+			bg = Color(0.78, 0.6, 0.18, 0.5)
 			border = Color("#f6d45d")
 			border_width = 3
 
 		if last_draw.has(number):
 			if owners.is_empty():
-				bg = Color("#082b2a")
+				bg = Color("#00a68e33")
 			border = Color("#f6f0df")
 			border_width = max(border_width, 4)
 
-		button.text = str(number)
+		button.text = ""
 		button.tooltip_text = _number_tooltip(number, owners, last_draw.has(number))
 		button.add_theme_stylebox_override("normal", _keno_board_button_style(bg, border, border_width))
-		button.add_theme_stylebox_override("hover", _keno_board_button_style(bg.lightened(0.12), Color("#f6f0df"), max(border_width, 2)))
-		button.add_theme_stylebox_override("pressed", _keno_board_button_style(bg.lightened(0.2), Color("#ffffff"), max(border_width, 3), true))
+		var hover_bg := Color("#f5d06718") if bg.a <= 0.0 else bg.lightened(0.12)
+		var pressed_bg := Color("#ffffff22") if bg.a <= 0.0 else bg.lightened(0.2)
+		button.add_theme_stylebox_override("hover", _keno_board_button_style(hover_bg, Color("#f6f0df"), max(border_width, 2)))
+		button.add_theme_stylebox_override("pressed", _keno_board_button_style(pressed_bg, Color("#ffffff"), max(border_width, 3), true))
 		button.add_theme_stylebox_override("focus", _keno_board_button_style(Color("#00000000"), Color("#00000000"), 0))
 		button.add_theme_color_override("font_color", Color("#fff8dc"))
 		button.add_theme_color_override("font_hover_color", Color("#ffffff"))
@@ -9654,6 +9945,62 @@ func _format_poker_paytable() -> String:
 	lines.append("")
 	lines.append("Pays are per active line.")
 	return "\n".join(lines)
+
+
+func _format_poker_line_payouts() -> String:
+	if poker_spin_in_progress:
+		return "PAYOUT LINES\nSpinning..."
+	if poker_last_line_results.is_empty():
+		return "PAYOUT LINES\nSpin a hand to show each active line."
+
+	var lines := ["PAYOUT LINES"]
+	for result_value in poker_last_line_results:
+		var result: Dictionary = result_value
+		var payout := float(result.get("payout", 0.0))
+		var multiplier := int(result.get("multiplier", 0))
+		var hand_name := str(result.get("hand", "No Pair"))
+		var pay_text := "$%.2f" % payout if payout > 0.0 else "$0.00"
+		var win_marker := " WIN" if payout > 0.0 else ""
+		lines.append("Line %d%s: %s %dx %s" % [
+			int(result.get("line", 0)),
+			win_marker,
+			hand_name,
+			multiplier,
+			pay_text,
+		])
+	return "\n".join(lines)
+
+
+func _format_poker_winning_line_summary() -> String:
+	var lines := []
+	for result_value in poker_last_line_results:
+		var result: Dictionary = result_value
+		var payout := float(result.get("payout", 0.0))
+		if payout <= 0.0:
+			continue
+		lines.append("Line %d: %s pays %dx ($%.2f)" % [
+			int(result.get("line", 0)),
+			str(result.get("hand", "Winning Hand")),
+			int(result.get("multiplier", 0)),
+			payout,
+		])
+
+	if lines.is_empty():
+		return "No winning lines."
+	return "\n".join(lines)
+
+
+func _poker_cell_is_in_winning_line(hand_index: int, card_index: int) -> bool:
+	if poker_spin_in_progress or poker_waiting_for_draw:
+		return false
+	for result_value in poker_last_line_results:
+		var result: Dictionary = result_value
+		if float(result.get("payout", 0.0)) <= 0.0:
+			continue
+		var pattern: Array = result.get("pattern", [])
+		if card_index < pattern.size() and int(pattern[card_index]) == hand_index:
+			return true
+	return false
 
 
 func _format_poker_hold_cards(indices: Array, cards: Array) -> String:

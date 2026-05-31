@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d1qv4b6q3qwpp"
-path="res://.godot/imported/DIAMONDS_ACE .png-3443d776b7540aacc813e10058a55aee.ctex"
+path="res://.godot/imported/DIAMONDS_ACE.png-3443d776b7540aacc813e10058a55aee.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://cards/DIAMONDS_ACE .png"
-dest_files=["res://.godot/imported/DIAMONDS_ACE .png-3443d776b7540aacc813e10058a55aee.ctex"]
+source_file="res://cards/DIAMONDS_ACE.png"
+dest_files=["res://.godot/imported/DIAMONDS_ACE.png-3443d776b7540aacc813e10058a55aee.ctex"]
 
 [params]
 
